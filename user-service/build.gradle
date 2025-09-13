@@ -51,10 +51,3 @@ tasks.named('test') {
 bootJar {
     archiveFileName = "${archivesBaseName}-${version}.jar"
 }
-
-flyway {
-    url = 'jdbc:postgresql://localhost:5432/userdb'
-    user = 'nishanth'
-    password = ''
-    locations = ['classpath:db/migration']
-}

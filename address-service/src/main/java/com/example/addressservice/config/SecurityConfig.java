@@ -56,7 +56,8 @@ public class SecurityConfig {
                     "/webjars/**",
                     "/favicon.ico",
                     "/error",
-                    "/internal/**"
+                    "/internal/**",
+                    "/api/v1/failed-events/**"
                 ).permitAll()
                 
                 // All other endpoints require authentication

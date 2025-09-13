@@ -76,6 +76,6 @@ spring:
     url: ${DATABASE_URL:jdbc:postgresql://user-db:5432/userdb}
   
   kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:kafka:9092}
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:kafka:9092}
 
 # Actuator disabled for Docker builds to avoid cgroupv2 issues

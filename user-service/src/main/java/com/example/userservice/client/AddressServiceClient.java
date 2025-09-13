@@ -4,12 +4,14 @@ import com.example.userservice.dto.AddressDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.client.RestClientException;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Component
@@ -77,6 +79,19 @@ public class AddressServiceClient {
         } catch (Exception e) {
             logger.error("Error checking addresses for user: {}", userId, e);
             return false;
+        }
+    }
+    
+    /**
+     * Get Address Service health status
+     */
+    public ResponseEntity<Map> getHealth() {
+        try {
+            String url = addressServiceUrl + "/actuator/health";
+            return restTemplate.getForEntity(url, Map.class);
+        } catch (Exception e) {
+            logger.error("Error checking Address Service health", e);
+            throw new RuntimeException("Failed to check Address Service health", e);
         }
     }
 }

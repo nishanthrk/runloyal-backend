@@ -68,11 +68,3 @@ dependencyManagement {
 tasks.named('test') {
     useJUnitPlatform()
 }
-
-// Flyway configuration
-flyway {
-    url = 'jdbc:postgresql://localhost:5432/auth_db'
-    user = 'auth_user'
-    password = 'auth_password'
-    locations = ['classpath:db/migration']
-}

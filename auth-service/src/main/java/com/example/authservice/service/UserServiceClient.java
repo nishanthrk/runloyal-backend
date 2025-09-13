@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -127,6 +128,23 @@ public class UserServiceClient {
         } catch (Exception e) {
             logger.error("Error creating user: {}", userDto.getEmail(), e);
             throw new RuntimeException("Failed to create user", e);
+        }
+    }
+    
+    public ResponseEntity<Map> getHealth() {
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("X-Internal-API-Key", internalApiKey);
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+            
+            String url = userServiceBaseUrl + "/actuator/health";
+            return restTemplate.exchange(
+                url, HttpMethod.GET, entity, Map.class
+            );
+            
+        } catch (Exception e) {
+            logger.error("Error checking User Service health", e);
+            throw new RuntimeException("Failed to check User Service health", e);
         }
     }
 }
