@@ -1,0 +1,11 @@
+rootProject.name = 'rl-backend'
+
+// Include all microservices
+include 'user-service'
+include 'address-service'
+include 'auth-service'
+
+// Set project directories
+project(':user-service').projectDir = file('user-service')
+project(':address-service').projectDir = file('address-service')
+project(':auth-service').projectDir = file('auth-service')

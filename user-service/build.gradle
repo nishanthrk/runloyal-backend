@@ -1,0 +1,29 @@
+// User Service specific configuration
+plugins {
+    id 'org.flywaydb.flyway' version '9.22.3'
+}
+
+archivesBaseName = 'user-service'
+description = 'User Profile Management Service'
+
+// Service-specific dependencies
+dependencies {
+    // Database - PostgreSQL specific for user service
+    runtimeOnly 'org.postgresql:postgresql'
+    implementation 'org.flywaydb:flyway-core'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+bootJar {
+    archiveFileName = "${archivesBaseName}-${version}.jar"
+}
+
+flyway {
+    url = 'jdbc:postgresql://localhost:5432/userdb'
+    user = 'nishanth'
+    password = ''
+    locations = ['classpath:db/migration']
+}

@@ -1,0 +1,32 @@
+// Address Service specific configuration
+plugins {
+    id 'org.flywaydb.flyway' version '9.22.3'
+}
+
+archivesBaseName = 'address-service'
+description = 'Address Management Service'
+
+// Service-specific dependencies
+dependencies {
+    // Database - PostgreSQL specific for address service
+    runtimeOnly 'org.postgresql:postgresql'
+    implementation 'org.flywaydb:flyway-core:9.22.3'
+    
+    // Test dependencies
+    testImplementation 'org.awaitility:awaitility:4.2.0'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+bootJar {
+    archiveFileName = "${archivesBaseName}-${version}.jar"
+}
+
+flyway {
+    url = 'jdbc:postgresql://localhost:5432/addressdb'
+    user = 'nishanth'
+    password = ''
+    locations = ['classpath:db/migration']
+}

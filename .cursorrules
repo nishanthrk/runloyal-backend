@@ -1,0 +1,192 @@
+# RL Backend Microservices - Project Intelligence
+
+## Project Overview
+This is a comprehensive microservices backend system built with Spring Boot 3.x, implementing modern event-driven architecture patterns. The system consists of three core services: Auth Service, User Service, and Address Service, with sophisticated event-driven communication via Kafka.
+
+## Architecture Patterns
+- **Microservices Architecture**: Independent, deployable services with database per service
+- **Event-Driven Design**: Outbox pattern for reliable event publishing, Kafka for event streaming
+- **JWT Authentication**: Access/refresh token pattern with Redis blacklisting
+- **OAuth2 Integration**: Social login with Google, Facebook, GitHub
+- **Distributed Transactions**: Eventual consistency via event-driven patterns
+
+## Key Implementation Details
+
+### Auth Service (Port 8081)
+- **JWT Implementation**: Complete JWT with refresh token rotation and blacklisting
+- **OAuth2 Social Login**: Google, Facebook, GitHub integration
+- **Security**: BCrypt password hashing, token revocation, session management
+- **Database**: Users, refresh_tokens, revoked_access_tokens tables
+- **APIs**: Registration, login, refresh, logout, profile endpoints
+
+### User Service (Port 8082)
+- **Outbox Pattern**: Reliable event publishing with scheduled processing
+- **Event Types**: UserCreated, UserUpdated, ProfileUpdated, UserDeleted
+- **Database**: Users, social_identities, outbox_events tables
+- **APIs**: CRUD operations, search, social identity linking
+- **Event Publishing**: Scheduled outbox event processing to Kafka
+
+### Address Service (Port 8083)
+- **Event Consumption**: Kafka event processing with idempotent handling
+- **Distributed Transactions**: Cross-service data synchronization
+- **Database**: Addresses, processed_events tables
+- **APIs**: Address CRUD, user address management
+- **Event Processing**: Idempotent event consumption with duplicate handling
+
+## Technology Stack
+- **Framework**: Spring Boot 3.2.0, Java 17
+- **Database**: PostgreSQL 15 (single instance with multiple databases: authdb, userdb, addressdb)
+- **Message Broker**: Apache Kafka 7.4.0 with Zookeeper
+- **Caching**: Redis 7 for token blacklisting
+- **Security**: Spring Security 6, JWT (jjwt 0.12.3), OAuth2
+- **Documentation**: SpringDoc OpenAPI 2.2.0 (Swagger)
+- **Testing**: JUnit 5, Testcontainers, Spring Boot Test
+- **Containerization**: Docker, Docker Compose
+
+## Development Patterns
+
+### Code Organization
+- **Package Structure**: Standard Spring Boot package structure
+- **Entity Design**: JPA entities with proper relationships and validation
+- **Service Layer**: Business logic separation with transaction management
+- **Repository Layer**: Spring Data JPA repositories with custom queries
+- **Controller Layer**: REST controllers with proper validation and error handling
+
+### Event-Driven Patterns
+- **Outbox Pattern**: Events stored in database within same transaction
+- **Scheduled Processing**: Background job processes pending events
+- **Idempotent Processing**: Duplicate events handled gracefully
+- **Event Schemas**: Well-defined event structures with versioning
+
+### Security Patterns
+- **JWT Filter**: Custom authentication filter for token validation
+- **Token Rotation**: Refresh token rotation on each use
+- **Blacklisting**: Redis-based immediate token revocation
+- **OAuth2 Flow**: Complete social login implementation
+
+## Database Design
+- **Database per Service**: Each service owns its data within separate databases on single PostgreSQL instance
+- **Migration Strategy**: Flyway versioned migrations
+- **Schema Design**: Proper normalization with JSONB for flexible data
+- **Indexing**: Performance-optimized indexes
+- **Relationships**: Proper foreign key relationships and constraints
+
+## Testing Strategy
+- **Unit Tests**: Service, repository, and controller layer testing
+- **Integration Tests**: Database and Kafka integration testing
+- **Testcontainers**: Container-based testing for external dependencies
+- **Event Testing**: Event-driven flow testing with async assertions
+- **API Testing**: Postman collection for end-to-end testing
+
+## Configuration Management
+- **Environment Profiles**: Default, docker, test profiles
+- **External Configuration**: Environment variables and YAML files
+- **Service Configuration**: Service-specific configuration properties
+- **Database Configuration**: Connection pooling and migration settings
+
+## Docker and Deployment
+- **Multi-stage Builds**: Optimized Docker images
+- **Docker Compose**: Complete orchestration with networking
+- **Service Dependencies**: Proper startup ordering and health checks
+- **Volume Management**: Persistent data storage
+- **Environment Configuration**: Container-specific configurations
+
+## API Design
+- **RESTful APIs**: Standard REST API design patterns
+- **OpenAPI Documentation**: Comprehensive Swagger documentation
+- **Request/Response Models**: Well-defined DTOs and validation
+- **Error Handling**: Consistent error response format
+- **Authentication**: JWT token-based authentication
+
+## Event Schemas
+- **UserCreated**: New user registration event
+- **UserUpdated**: User profile update event
+- **ProfileUpdated**: Detailed profile update with address info
+- **UserDeleted**: User account deletion event
+- **Event Processing**: Idempotent processing with duplicate detection
+
+## Performance Considerations
+- **Connection Pooling**: HikariCP database connection pooling
+- **Caching**: Redis caching for token blacklisting
+- **Async Processing**: Asynchronous event processing
+- **Batch Processing**: Efficient event batch processing
+- **Resource Management**: Proper resource cleanup and management
+
+## Security Considerations
+- **Input Validation**: Comprehensive input validation and sanitization
+- **SQL Injection Prevention**: Parameterized queries and JPA
+- **XSS Prevention**: Proper output encoding and validation
+- **CSRF Protection**: Cross-site request forgery protection
+- **Audit Logging**: Security event logging and monitoring
+
+## Monitoring and Observability
+- **Health Checks**: Actuator health endpoints for all services
+- **Metrics**: Application and business metrics
+- **Logging**: Structured logging with correlation IDs
+- **Error Tracking**: Comprehensive error logging and handling
+- **Performance Monitoring**: Response time and throughput metrics
+
+## Development Workflow
+- **Local Development**: Docker Compose for local development
+- **Database Migrations**: Flyway for database version control
+- **API Testing**: Postman collection for API testing
+- **Code Quality**: Clean code principles and best practices
+- **Documentation**: Comprehensive documentation and examples
+
+## Common Commands
+```bash
+# Start infrastructure (single PostgreSQL instance with multiple databases)
+docker-compose up -d postgres redis kafka zookeeper
+
+# Run services
+cd auth-service && ./mvnw spring-boot:run
+cd user-service && ./mvnw spring-boot:run
+cd address-service && ./mvnw spring-boot:run
+
+# Run tests
+./mvnw test
+./mvnw verify
+
+# Database migrations
+./mvnw flyway:migrate
+```
+
+## Key Files and Locations
+- **Docker Compose**: `docker/docker-compose.yml`
+- **Postman Collection**: `postman-collection.json`
+- **API Documentation**: Swagger UI at `/swagger-ui.html`
+- **Database Migrations**: `src/main/resources/db/migration/`
+- **Configuration**: `src/main/resources/application.yml`
+- **Memory Bank**: `memory-bank/` directory with comprehensive documentation
+
+## Project Status
+- **Implementation**: 95% complete, production-ready
+- **Testing**: Comprehensive test coverage with integration tests
+- **Documentation**: Complete API documentation and project docs
+- **Deployment**: Docker Compose ready for local development
+- **Quality**: High code quality with security best practices
+
+## Future Enhancements
+- **API Gateway**: Spring Cloud Gateway for centralized routing
+- **Service Discovery**: Eureka or Consul for service discovery
+- **Centralized Configuration**: Spring Cloud Config
+- **Advanced Monitoring**: Prometheus and Grafana integration
+- **Multi-tenant Architecture**: Support for multiple tenants
+- **Advanced Security**: Two-factor authentication and advanced security features
+
+## Troubleshooting
+- **Port Conflicts**: Check if ports 8081-8083, 5432, 6379, 9092 are available
+- **Database Issues**: Ensure PostgreSQL container is running and accessible with all databases (authdb, userdb, addressdb)
+- **Kafka Issues**: Verify Kafka and Zookeeper containers are healthy
+- **Redis Issues**: Check Redis container status and connectivity
+- **Service Dependencies**: Ensure proper startup ordering in Docker Compose
+
+## Best Practices
+- **Event Ordering**: Use idempotent processing for event handling
+- **Error Handling**: Implement proper error handling and retry mechanisms
+- **Security**: Always validate inputs and use parameterized queries
+- **Testing**: Write comprehensive tests for all business logic
+- **Documentation**: Keep API documentation up-to-date
+- **Monitoring**: Implement proper health checks and monitoring
+- **Performance**: Optimize database queries and use connection pooling
+- **Maintenance**: Regular security updates and dependency management

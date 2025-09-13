@@ -1,0 +1,87 @@
+plugins {
+    id 'org.springframework.boot' version '3.2.0' apply false
+    id 'io.spring.dependency-management' version '1.1.4' apply false
+    id 'org.flywaydb.flyway' version '9.22.3' apply false
+}
+
+// Common configuration for all subprojects
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'org.springframework.boot'
+    apply plugin: 'io.spring.dependency-management'
+    
+    group = 'com.example'
+    version = '1.0.0'
+    
+    java {
+        sourceCompatibility = '17'
+        targetCompatibility = '17'
+    }
+    
+    configurations {
+        compileOnly {
+            extendsFrom annotationProcessor
+        }
+    }
+    
+    repositories {
+        mavenCentral()
+    }
+    
+    // Common dependencies for all services
+    dependencies {
+        // Spring Boot Starters
+        implementation 'org.springframework.boot:spring-boot-starter-web'
+        implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+        implementation 'org.springframework.boot:spring-boot-starter-security'
+        implementation 'org.springframework.boot:spring-boot-starter-validation'
+        implementation 'org.springframework.boot:spring-boot-starter-actuator'
+        
+        // Kafka
+        implementation 'org.springframework.kafka:spring-kafka'
+        
+        // JWT
+        implementation 'io.jsonwebtoken:jjwt-api:0.12.3'
+        runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.3'
+        runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.3'
+        
+        // Swagger/OpenAPI
+        implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0'
+        
+        // JSON Processing
+        implementation 'com.fasterxml.jackson.core:jackson-databind'
+        
+        // Test Dependencies
+        testImplementation 'org.springframework.boot:spring-boot-starter-test'
+        testImplementation 'org.springframework.kafka:spring-kafka-test'
+        testImplementation 'org.springframework.security:spring-security-test'
+        testImplementation 'com.h2database:h2'
+    }
+    
+    tasks.named('test') {
+        useJUnitPlatform()
+    }
+    
+    bootJar {
+        archiveFileName = "${project.name}-${version}.jar"
+    }
+}
+
+// Root project tasks
+task buildAll {
+    dependsOn subprojects.collect { ":${it.name}:build" }
+    description = 'Build all microservices'
+    group = 'build'
+}
+
+task cleanAll {
+    dependsOn subprojects.collect { ":${it.name}:clean" }
+    description = 'Clean all microservices'
+    group = 'build'
+}
+
+task testAll {
+    dependsOn subprojects.collect { ":${it.name}:test" }
+    description = 'Test all microservices'
+    group = 'verification'
+}
