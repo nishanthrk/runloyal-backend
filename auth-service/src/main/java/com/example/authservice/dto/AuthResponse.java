@@ -4,29 +4,31 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class AuthResponse {
     
-    @JsonProperty("access_token")
+    @JsonProperty("accessToken")
     private String accessToken;
     
-    @JsonProperty("refresh_token")
+    @JsonProperty("refreshToken")
     private String refreshToken;
     
-    @JsonProperty("token_type")
+    @JsonProperty("tokenType")
     private String tokenType = "Bearer";
     
-    @JsonProperty("expires_in")
+    @JsonProperty("expiresIn")
     private long expiresIn;
     
-    @JsonProperty("refresh_expires_in")
+    @JsonProperty("refreshExpiresIn")
     private long refreshExpiresIn;
     
-    @JsonProperty("user_id")
+    @JsonProperty("userId")
     private Long userId;
     
+    @JsonProperty("username")
     private String username;
     
+    @JsonProperty("email")
     private String email;
     
-    @JsonProperty("email_verified")
+    @JsonProperty("emailVerified")
     private Boolean emailVerified;
     
     // Constructors

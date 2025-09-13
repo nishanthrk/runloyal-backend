@@ -3,9 +3,9 @@ spring:
     name: user-service
   
   datasource:
-    url: jdbc:postgresql://localhost:5432/userdb
-    username: nishanth
-    password: 
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/userdb}
+    username: ${DATABASE_USERNAME:nishanth}
+    password: ${DATABASE_PASSWORD:}
     driver-class-name: org.postgresql.Driver
   
   jpa:
@@ -23,7 +23,7 @@ spring:
     locations: classpath:db/migration
   
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
@@ -73,7 +73,9 @@ spring:
       on-profile: docker
   
   datasource:
-    url: jdbc:postgresql://user-db:5432/userdb
+    url: ${DATABASE_URL:jdbc:postgresql://user-db:5432/userdb}
   
   kafka:
-    bootstrap-servers: kafka:9092
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:kafka:9092}
+
+# Actuator disabled for Docker builds to avoid cgroupv2 issues

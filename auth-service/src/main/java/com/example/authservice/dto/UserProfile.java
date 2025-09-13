@@ -8,25 +8,28 @@ import java.util.Map;
 
 public class UserProfile {
     
-    @JsonProperty("user_id")
+    @JsonProperty("userId")
     private Long userId;
     
+    @JsonProperty("username")
     private String username;
     
+    @JsonProperty("email")
     private String email;
     
-    @JsonProperty("email_verified")
+    @JsonProperty("emailVerified")
     private Boolean emailVerified;
     
+    @JsonProperty("enabled")
     private Boolean enabled;
     
-    @JsonProperty("created_at")
+    @JsonProperty("createdAt")
     private LocalDateTime createdAt;
     
-    @JsonProperty("updated_at")
+    @JsonProperty("updatedAt")
     private LocalDateTime updatedAt;
     
-    @JsonProperty("social_accounts")
+    @JsonProperty("socialAccounts")
     private List<SocialAccountInfo> socialAccounts;
     
     // Constructors

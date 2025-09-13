@@ -1,6 +1,8 @@
 package com.example.authservice.service;
 
 import com.example.authservice.entity.RefreshToken;
+import com.example.authservice.entity.OAuthProviderToken;
+import com.example.authservice.repository.OAuthProviderTokenRepository;
 import com.example.authservice.dto.UserDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,14 +22,17 @@ public class AuthService {
     private final UserServiceClient userServiceClient;
     private final JwtService jwtService;
     private final RefreshTokenService refreshTokenService;
+    private final OAuthProviderTokenRepository oauthProviderTokenRepository;
     
     public AuthService(
             UserServiceClient userServiceClient,
             JwtService jwtService,
-            RefreshTokenService refreshTokenService) {
+            RefreshTokenService refreshTokenService,
+            OAuthProviderTokenRepository oauthProviderTokenRepository) {
         this.userServiceClient = userServiceClient;
         this.jwtService = jwtService;
         this.refreshTokenService = refreshTokenService;
+        this.oauthProviderTokenRepository = oauthProviderTokenRepository;
     }
     
     @Transactional
@@ -115,33 +120,78 @@ public class AuthService {
                                    Map<String, Object> profile,
                                    String clientId, String deviceInfo, String ipAddress) {
         try {
-            // TODO: Implement social login via User Service
-            // UserDto user = userServiceClient.createOrUpdateSocialUser(
-            //     provider, providerUserId, email, username, profile
-            // );
-            throw new RuntimeException("Social login not implemented yet");
+            // Check if OAuth provider token already exists
+            Optional<OAuthProviderToken> existingToken = oauthProviderTokenRepository
+                .findByProviderAndProviderUserId(provider, providerUserId);
             
-            // TODO: Implement the rest of social login
-            // Map<String, Object> additionalClaims = new HashMap<>();
-            // additionalClaims.put("socialProvider", provider);
-            // 
-            // String accessToken = jwtService.generateAccessToken(user, additionalClaims);
-            // RefreshToken refreshToken = refreshTokenService.createRefreshToken(
-            //     user.getId(), clientId, deviceInfo, ipAddress
-            // );
-            // 
-            // logger.info("Social login successful for user: {} via {}", user.getUsername(), provider);
-            // 
-            // return new AuthResponse(
-            //     accessToken,
-            //     refreshToken.getId().toString(),
-            //     jwtService.getAccessTokenExpiration(),
-            //     refreshTokenService.getRefreshTokenExpiration(),
-            //     user.getId(),
-            //     user.getUsername(),
-            //     user.getEmail(),
-            //     user.getEmailVerified()
-            // );
+            UserDto user;
+            
+            if (existingToken.isPresent()) {
+                // User already exists with this OAuth provider
+                Long userId = existingToken.get().getUserId();
+                Optional<UserDto> userOpt = userServiceClient.getUserById(userId);
+                if (userOpt.isEmpty()) {
+                    throw new RuntimeException("User not found in User Service");
+                }
+                user = userOpt.get();
+                logger.info("Existing social login user found: {} via {}", user.getUsername(), provider);
+            } else {
+                // Check if user exists by email
+                Optional<UserDto> existingUserOpt = userServiceClient.getUserByEmail(email);
+                
+                if (existingUserOpt.isPresent()) {
+                    // User exists, link this OAuth provider
+                    user = existingUserOpt.get();
+                    logger.info("Linking OAuth provider {} to existing user: {}", provider, user.getUsername());
+                } else {
+                    // Create new user
+                    UserDto newUserDto = new UserDto();
+                    newUserDto.setUsername(username);
+                    newUserDto.setEmail(email);
+                    newUserDto.setEmailVerified(true); // OAuth emails are typically verified
+                    
+                    // Extract additional profile info if available
+                    if (profile.containsKey("given_name")) {
+                        newUserDto.setFirstName((String) profile.get("given_name"));
+                    }
+                    if (profile.containsKey("family_name")) {
+                        newUserDto.setLastName((String) profile.get("family_name"));
+                    }
+                    
+                    user = userServiceClient.createUser(newUserDto);
+                    logger.info("Created new user via social login: {} via {}", user.getUsername(), provider);
+                }
+                
+                // Store OAuth provider token
+                OAuthProviderToken oauthToken = new OAuthProviderToken();
+                oauthToken.setUserId(user.getId());
+                oauthToken.setProvider(provider);
+                oauthToken.setProviderUserId(providerUserId);
+                // Note: We don't store access tokens from OAuth2User as they're not available
+                oauthProviderTokenRepository.save(oauthToken);
+            }
+            
+            // Generate JWT tokens
+            Map<String, Object> additionalClaims = new HashMap<>();
+            additionalClaims.put("socialProvider", provider);
+            
+            String accessToken = jwtService.generateAccessToken(user, additionalClaims);
+            RefreshToken refreshToken = refreshTokenService.createRefreshToken(
+                user.getId(), clientId, deviceInfo, ipAddress
+            );
+            
+            logger.info("Social login successful for user: {} via {}", user.getUsername(), provider);
+            
+            return new AuthResponse(
+                accessToken,
+                refreshToken.getId().toString(),
+                jwtService.getAccessTokenExpiration(),
+                refreshTokenService.getRefreshTokenExpiration(),
+                user.getId(),
+                user.getUsername(),
+                user.getEmail(),
+                user.getEmailVerified()
+            );
         } catch (Exception e) {
             logger.error("Social login failed for provider: {} and user: {}", provider, providerUserId, e);
             throw new RuntimeException("Social login failed: " + e.getMessage());

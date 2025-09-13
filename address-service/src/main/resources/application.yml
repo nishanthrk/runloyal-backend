@@ -3,9 +3,9 @@ spring:
     name: address-service
   
   datasource:
-    url: jdbc:postgresql://localhost:5432/addressdb
-    username: nishanth
-    password: 
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/addressdb}
+    username: ${DATABASE_USERNAME:nishanth}
+    password: ${DATABASE_PASSWORD:}
     driver-class-name: org.postgresql.Driver
   
   jpa:
@@ -23,7 +23,7 @@ spring:
     locations: classpath:db/migration
   
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
     consumer:
       group-id: address-service-group
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
@@ -65,7 +65,9 @@ spring:
       on-profile: docker
   
   datasource:
-    url: jdbc:postgresql://address-db:5432/addressdb
+    url: ${DATABASE_URL:jdbc:postgresql://address-db:5432/addressdb}
   
   kafka:
-    bootstrap-servers: kafka:9092
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:kafka:9092}
+
+# Actuator disabled for Docker builds to avoid cgroupv2 issues
