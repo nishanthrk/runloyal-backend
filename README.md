@@ -43,20 +43,29 @@ docker-compose ps
 ### 3. Run Services Locally (Development)
 
 ```bash
-# Terminal 1 - Auth Service
+# Terminal 1 - Auth Service (with OAuth2 configuration)
 cd auth-service
-./mvnw spring-boot:run
+export GOOGLE_CLIENT_ID="189314938353-c85gkd8vnu0gp1tc717hl5epvepugcgh.apps.googleusercontent.com" && export GOOGLE_CLIENT_SECRET="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" && ./gradlew bootRun
 
 # Terminal 2 - User Service
 cd user-service
-./mvnw spring-boot:run
+./gradlew bootRun
 
 # Terminal 3 - Address Service
 cd address-service
-./mvnw spring-boot:run
+./gradlew bootRun
 ```
 
-### 4. Or Run Everything with Docker
+### 4. OAuth2 Configuration
+
+The auth service requires Google OAuth2 credentials for social login functionality. The environment variables are:
+
+- `GOOGLE_CLIENT_ID`: Your Google OAuth2 client ID
+- `GOOGLE_CLIENT_SECRET`: Your Google OAuth2 client secret
+
+These are automatically set in the startup command above. For production, set these as environment variables or use a configuration management system.
+
+### 5. Or Run Everything with Docker
 
 ```bash
 # Build and start all services
@@ -229,6 +238,9 @@ curl -X POST http://localhost:8081/api/auth/login \
 # Get user profile (replace TOKEN with actual JWT)
 curl -X GET http://localhost:8081/api/auth/profile \
   -H "Authorization: Bearer TOKEN"
+
+# Test OAuth2 Google login (opens in browser)
+# Navigate to: http://localhost:8081/oauth2/authorization/google
 ```
 
 ## 🔄 Event Flow

@@ -159,10 +159,17 @@ public class AuthController {
         @ApiResponse(responseCode = "200", description = "Logout successful"),
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    public ResponseEntity<?> logout(HttpServletRequest request) {
+    public ResponseEntity<?> logout(@RequestBody(required = false) Map<String, String> requestBody, HttpServletRequest request) {
         try {
             String accessToken = extractTokenFromRequest(request);
-            String refreshToken = request.getHeader("X-Refresh-Token");
+            String refreshToken = null;
+            
+            // Try to get refresh token from request body first, then from header
+            if (requestBody != null && requestBody.containsKey("refreshToken")) {
+                refreshToken = requestBody.get("refreshToken");
+            } else {
+                refreshToken = request.getHeader("X-Refresh-Token");
+            }
             
             authService.logout(accessToken, refreshToken);
             
@@ -198,109 +205,6 @@ public class AuthController {
             logger.error("Logout all failed: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Logout all failed"));
-        }
-    }
-    
-    @GetMapping("/profile")
-    @Operation(summary = "Get user profile", description = "Get current user's profile information")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Profile retrieved successfully"),
-        @ApiResponse(responseCode = "401", description = "Unauthorized"),
-        @ApiResponse(responseCode = "500", description = "Internal server error")
-    })
-    public ResponseEntity<?> getProfile(HttpServletRequest request) {
-        try {
-            String accessToken = extractTokenFromRequest(request);
-            Optional<UserDto> userOpt = authService.getUserFromToken(accessToken);
-            
-            if (userOpt.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(Map.of("error", "Invalid token"));
-            }
-            
-            UserDto user = userOpt.get();
-            // TODO: Implement social identities via User Service
-            // List<SocialIdentity> socialIdentities = userService.getUserSocialIdentities(user);
-            
-            UserProfile profile = new UserProfile(
-                user.getId(),
-                user.getUsername(),
-                user.getEmail(),
-                user.getEmailVerified(),
-                user.getEnabled(),
-                user.getCreatedAt(),
-                user.getUpdatedAt()
-            );
-            
-            // TODO: Add social accounts when social identities are implemented
-            // List<UserProfile.SocialAccountInfo> socialAccounts = socialIdentities.stream()
-            //         .map(si -> new UserProfile.SocialAccountInfo(
-            //             si.getProvider(),
-            //             si.getLinkedAt(),
-            //             si.getProfile()
-            //         ))
-            //         .collect(Collectors.toList());
-            // 
-            // profile.setSocialAccounts(socialAccounts);
-            
-            return ResponseEntity.ok(profile);
-        } catch (Exception e) {
-            logger.error("Get profile failed: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Failed to get profile"));
-        }
-    }
-    
-    @GetMapping("/oauth2/success")
-    @Operation(summary = "OAuth2 success callback", description = "Handle successful OAuth2 authentication")
-    public ResponseEntity<?> oauth2Success(HttpServletRequest httpRequest) {
-        try {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            
-            if (authentication == null || !(authentication.getPrincipal() instanceof OAuth2User)) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(Map.of("error", "OAuth2 authentication failed"));
-            }
-            
-            OAuth2User oauth2User = (OAuth2User) authentication.getPrincipal();
-            String provider = (String) oauth2User.getAttribute("provider");
-            String providerUserId = oauth2User.getName();
-            String email = oauth2User.getAttribute("email");
-            String username = oauth2User.getAttribute("name");
-            
-            Map<String, Object> profile = new HashMap<>(oauth2User.getAttributes());
-            
-            String clientId = "web";
-            String deviceInfo = httpRequest.getHeader("User-Agent");
-            String ipAddress = getClientIpAddress(httpRequest);
-            
-            AuthService.AuthResponse authResponse = authService.socialLogin(
-                provider,
-                providerUserId,
-                email,
-                username,
-                profile,
-                clientId,
-                deviceInfo,
-                ipAddress
-            );
-            
-            AuthResponse response = new AuthResponse(
-                authResponse.getAccessToken(),
-                authResponse.getRefreshToken(),
-                authResponse.getAccessTokenExpiresIn(),
-                authResponse.getRefreshTokenExpiresIn(),
-                authResponse.getUserId(),
-                authResponse.getUsername(),
-                authResponse.getEmail(),
-                authResponse.getEmailVerified()
-            );
-            
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            logger.error("OAuth2 success handling failed: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "OAuth2 authentication failed"));
         }
     }
     

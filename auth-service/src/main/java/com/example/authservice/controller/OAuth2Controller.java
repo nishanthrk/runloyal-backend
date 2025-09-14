@@ -189,46 +189,6 @@ public class OAuth2Controller {
         }
     }
 
-    /**
-     * Alternative endpoint for mobile apps that need to handle OAuth2 differently
-     */
-    @PostMapping("/mobile/{provider}")
-    @Operation(summary = "Mobile OAuth2 login", 
-               description = "Handle OAuth2 login for mobile applications")
-    public ResponseEntity<?> mobileOAuth2Login(
-            @PathVariable String provider,
-            @RequestBody Map<String, String> requestBody,
-            HttpServletRequest request) {
-        
-        try {
-            String accessToken = requestBody.get("accessToken");
-            String idToken = requestBody.get("idToken");
-            
-            if (accessToken == null && idToken == null) {
-                return ResponseEntity.badRequest()
-                    .body(Map.of("error", "Either accessToken or idToken is required"));
-            }
-            
-            // For mobile apps, you would typically validate the token with the OAuth2 provider
-            // and then create a user session. This is a simplified version.
-            
-            // TODO: Implement mobile OAuth2 token validation
-            // This would involve calling the OAuth2 provider's userinfo endpoint
-            // with the provided token to get user information
-            
-            return ResponseEntity.ok(Map.of(
-                "message", "Mobile OAuth2 login not fully implemented yet",
-                "provider", provider,
-                "note", "This endpoint requires additional implementation for token validation"
-            ));
-            
-        } catch (Exception e) {
-            logger.error("Mobile OAuth2 login failed for provider: {}", provider, e);
-            return ResponseEntity.internalServerError()
-                .body(Map.of("error", "Mobile OAuth2 login failed: " + e.getMessage()));
-        }
-    }
-
     private boolean isValidProvider(String provider) {
         return provider != null && 
                (provider.equalsIgnoreCase("google") || 
@@ -255,66 +215,6 @@ public class OAuth2Controller {
         }
         
         return url.toString();
-    }
-
-    private String extractProviderFromRequest(HttpServletRequest request) {
-        String referer = request.getHeader("Referer");
-        if (referer != null) {
-            if (referer.contains("/oauth2/authorization/google")) return "google";
-            if (referer.contains("/oauth2/authorization/github")) return "github";
-            if (referer.contains("/oauth2/authorization/facebook")) return "facebook";
-        }
-        return "unknown";
-    }
-
-    private String extractEmail(OAuth2User oauth2User, String provider) {
-        switch (provider.toLowerCase()) {
-            case "google":
-                return oauth2User.getAttribute("email");
-            case "github":
-                return oauth2User.getAttribute("email");
-            case "facebook":
-                return oauth2User.getAttribute("email");
-            default:
-                return oauth2User.getAttribute("email");
-        }
-    }
-
-    private String extractName(OAuth2User oauth2User, String provider) {
-        switch (provider.toLowerCase()) {
-            case "google":
-                return oauth2User.getAttribute("name");
-            case "github":
-                return oauth2User.getAttribute("name");
-            case "facebook":
-                return oauth2User.getAttribute("name");
-            default:
-                return oauth2User.getAttribute("name");
-        }
-    }
-
-    private String extractProviderId(OAuth2User oauth2User, String provider) {
-        switch (provider.toLowerCase()) {
-            case "google":
-                return oauth2User.getAttribute("sub");
-            case "github":
-                Object id = oauth2User.getAttribute("id");
-                return id != null ? id.toString() : null;
-            case "facebook":
-                return oauth2User.getAttribute("id");
-            default:
-                Object defaultId = oauth2User.getAttribute("id");
-                return defaultId != null ? defaultId.toString() : oauth2User.getAttribute("sub");
-        }
-    }
-
-    private String extractDeviceInfo(HttpServletRequest request) {
-        String userAgent = request.getHeader("User-Agent");
-        String clientIp = getClientIpAddress(request);
-        
-        return String.format("OAuth2 Login - IP: %s, User-Agent: %s", 
-                clientIp != null ? clientIp : "unknown", 
-                userAgent != null ? userAgent.substring(0, Math.min(userAgent.length(), 200)) : "unknown");
     }
 
     private String getClientIpAddress(HttpServletRequest request) {

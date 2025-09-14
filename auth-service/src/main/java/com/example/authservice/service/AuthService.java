@@ -338,7 +338,19 @@ public class AuthService {
             String username = jwtService.extractUsername(token);
             Optional<UserDto> userOpt = userServiceClient.getUserByUsername(username);
             
-            return userOpt.isPresent() && jwtService.isTokenValid(token, userOpt.get());
+            if (userOpt.isEmpty()) {
+                return false;
+            }
+            
+            UserDto user = userOpt.get();
+            
+            // Check if auth credentials are enabled
+            Optional<AuthCredentials> authCredentialsOpt = authCredentialsRepository.findActiveByUserId(user.getId());
+            if (authCredentialsOpt.isEmpty() || !authCredentialsOpt.get().getEnabled()) {
+                return false;
+            }
+            
+            return jwtService.isTokenValid(token, user);
         } catch (Exception e) {
             logger.error("Token validation failed: {}", e.getMessage());
             return false;

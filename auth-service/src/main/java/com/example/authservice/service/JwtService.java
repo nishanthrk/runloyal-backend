@@ -140,8 +140,7 @@ public class JwtService {
             final String username = extractUsername(token);
             return username.equals(user.getUsername()) 
                     && !isTokenExpired(token) 
-                    && !isTokenRevoked(token)
-                    && user.getEnabled();
+                    && !isTokenRevoked(token);
         } catch (JwtException e) {
             logger.error("Token validation failed: {}", e.getMessage());
             return false;
