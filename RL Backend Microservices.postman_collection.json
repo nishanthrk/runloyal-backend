@@ -1,0 +1,715 @@
+{
+	"info": {
+		"_postman_id": "4804273c-a551-4512-b9a8-f30e37107129",
+		"name": "RL Backend Microservices",
+		"description": "Complete testing collection for Auth, User, and Address services with distributed transactions, social login, and comprehensive health checks",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "1769974",
+		"_collection_link": "https://gold-crescent-723118.postman.co/workspace/ITPL~1e8ff00d-ba19-414a-b0b9-34ff049b712b/collection/1769974-4804273c-a551-4512-b9a8-f30e37107129?action=share&source=collection_link&creator=1769974"
+	},
+	"item": [
+		{
+			"name": "1. Health Checks",
+			"item": [
+				{
+					"name": "Auth Service Health",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}:{{authServicePort}}/health",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"port": "{{authServicePort}}",
+							"path": [
+								"health"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "User Service Health",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}:{{userServicePort}}/health",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"port": "{{userServicePort}}",
+							"path": [
+								"health"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Address Service Health",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}:{{addressServicePort}}/health",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"port": "{{addressServicePort}}",
+							"path": [
+								"health"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "Comprehensive health checks for all services with dependency monitoring"
+		},
+		{
+			"name": "2. Auth Service - Authentication Flow",
+			"item": [
+				{
+					"name": "Register New User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    pm.collectionVariables.set('accessToken', response.accessToken);",
+									"    pm.collectionVariables.set('refreshToken', response.refreshToken);",
+									"    pm.collectionVariables.set('userId', response.user.id);",
+									"    console.log('User registered successfully. User ID:', response.user.id);",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"nishanth\",\n  \"email\": \"nishanthravi@gom.com\",\n  \"password\": \"password123\",\n  \"firstName\": \"Nishanth\",\n  \"lastName\": \"Ravi\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}:{{authServicePort}}/api/auth/register",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"port": "{{authServicePort}}",
+							"path": [
+								"api",
+								"auth",
+								"register"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    pm.collectionVariables.set('accessToken', response.accessToken);",
+									"    pm.collectionVariables.set('refreshToken', response.refreshToken);",
+									"    pm.collectionVariables.set('userId', response.userId);",
+									"    console.log('User logged in successfully. User ID:', response.userId);",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    //   \"identifier\": \"nishanthravi\",\n    //   \"password\": \"password123\"\n    \"identifier\": \"nishanthravi@gom.com\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}:{{authServicePort}}/api/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"port": "{{authServicePort}}",
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Social Login - Google",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}:{{authServicePort}}/oauth2/authorization/google",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"port": "{{authServicePort}}",
+							"path": [
+								"oauth2",
+								"authorization",
+								"google"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Refresh Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    pm.collectionVariables.set('accessToken', response.accessToken);",
+									"    pm.collectionVariables.set('refreshToken', response.refreshToken);",
+									"    console.log('Token refreshed successfully');",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}:{{authServicePort}}/api/auth/refresh",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"port": "{{authServicePort}}",
+							"path": [
+								"api",
+								"auth",
+								"refresh"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Logout User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}:{{authServicePort}}/api/auth/logout",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"port": "{{authServicePort}}",
+							"path": [
+								"api",
+								"auth",
+								"logout"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "Complete authentication flow including traditional and social login"
+		},
+		{
+			"name": "3. User Service - Profile Management",
+			"item": [
+				{
+					"name": "Get User Profile (User Service)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}:{{userServicePort}}/api/users/{{userId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"port": "{{userServicePort}}",
+							"path": [
+								"api",
+								"users",
+								"{{userId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Users",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}:{{userServicePort}}/api/users?page=0&size=10",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"port": "{{userServicePort}}",
+							"path": [
+								"api",
+								"users"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get User by Username",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}:{{userServicePort}}/api/users/username/testuser",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"port": "{{userServicePort}}",
+							"path": [
+								"api",
+								"users",
+								"username",
+								"testuser"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get User by Email",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}:{{userServicePort}}/api/users/email/test@example.com",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"port": "{{userServicePort}}",
+							"path": [
+								"api",
+								"users",
+								"email",
+								"test@example.com"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Search Users",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}:{{userServicePort}}/api/users/search?q=test",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"port": "{{userServicePort}}",
+							"path": [
+								"api",
+								"users",
+								"search"
+							],
+							"query": [
+								{
+									"key": "q",
+									"value": "test"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update User Profile Only",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"firstName\": \"Updated\",\n  \"lastName\": \"User\",\n  \"phoneNumber\": \"+1234567890\",\n  \"dateOfBirth\": \"1990-01-01\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}:{{userServicePort}}/api/users/{{userId}}/profile",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"port": "{{userServicePort}}",
+							"path": [
+								"api",
+								"users",
+								"{{userId}}",
+								"profile"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update User (Full)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"updateduser\",\n  \"email\": \"updated@example.com\",\n  \"firstName\": \"Updated\",\n  \"lastName\": \"User\",\n  \"phoneNumber\": \"+1987654321\",\n  \"dateOfBirth\": \"1985-05-15\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}:{{userServicePort}}/api/users/{{userId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"port": "{{userServicePort}}",
+							"path": [
+								"api",
+								"users",
+								"{{userId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete User",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}:{{userServicePort}}/api/users/{{userId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"port": "{{userServicePort}}",
+							"path": [
+								"api",
+								"users",
+								"{{userId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Check Username Exists",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}:{{userServicePort}}/api/users/exists/username/testuser",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"port": "{{userServicePort}}",
+							"path": [
+								"api",
+								"users",
+								"exists",
+								"username",
+								"testuser"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Check Email Exists",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}:{{userServicePort}}/api/users/exists/email/test@example.com",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"port": "{{userServicePort}}",
+							"path": [
+								"api",
+								"users",
+								"exists",
+								"email",
+								"test@example.com"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "Complete user profile management with search and CRUD operations"
+		},
+		{
+			"name": "4. Internal APIs (Service-to-Service)",
+			"item": [
+				{
+					"name": "Get User by Username (Internal)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-Internal-API-Key",
+								"value": "internal-secret-key"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}:{{userServicePort}}/internal/users/by-username?username=testuser",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"port": "{{userServicePort}}",
+							"path": [
+								"internal",
+								"users",
+								"by-username"
+							],
+							"query": [
+								{
+									"key": "username",
+									"value": "testuser"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get User by Email (Internal)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-Internal-API-Key",
+								"value": "internal-secret-key"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}:{{userServicePort}}/api/users/email/nishanthravi@gom.com",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"port": "{{userServicePort}}",
+							"path": [
+								"api",
+								"users",
+								"email",
+								"nishanthravi@gom.com"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create User (Internal)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-Internal-API-Key",
+								"value": "internal-secret-key"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"internaluser\",\n  \"email\": \"internal@example.com\",\n  \"firstName\": \"Internal\",\n  \"lastName\": \"User\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}:{{userServicePort}}/internal/users",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"port": "{{userServicePort}}",
+							"path": [
+								"internal",
+								"users"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "Internal APIs for service-to-service communication"
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost"
+		},
+		{
+			"key": "authServicePort",
+			"value": "8081"
+		},
+		{
+			"key": "userServicePort",
+			"value": "8082"
+		},
+		{
+			"key": "addressServicePort",
+			"value": "8083"
+		},
+		{
+			"key": "accessToken",
+			"value": ""
+		},
+		{
+			"key": "refreshToken",
+			"value": ""
+		},
+		{
+			"key": "userId",
+			"value": ""
+		},
+		{
+			"key": "addressId",
+			"value": ""
+		}
+	]
+}
