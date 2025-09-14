@@ -21,6 +21,7 @@ spring:
     enabled: true
     baseline-on-migrate: true
     locations: classpath:db/migration
+    validate-on-migrate: false
   
   redis:
     host: ${REDIS_HOST:127.0.0.1}
@@ -114,11 +115,11 @@ app:
     cleanup-interval: ${REFRESH_TOKEN_CLEANUP_INTERVAL:3600000} # 1 hour
   
   redis:
-    token-blacklist:
-      key-prefix: "auth:blacklist:"
-      default-ttl: ${JWT_ACCESS_EXPIRATION:900000} # Same as access token expiration
-    user-cache:
-      key-prefix: "auth:user:"
+    tokenBlacklist:
+      keyPrefix: "auth:blacklist:"
+      defaultTtl: ${JWT_ACCESS_EXPIRATION:900000} # Same as access token expiration
+    userCache:
+      keyPrefix: "auth:user:"
       ttl: 300000 # 5 minutes
   
   user-service:

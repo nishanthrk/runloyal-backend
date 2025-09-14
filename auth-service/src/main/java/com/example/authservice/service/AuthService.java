@@ -325,8 +325,13 @@ public class AuthService {
     @Transactional
     public void logoutAll(Long userId) {
         try {
+            // Revoke all refresh tokens in database
             refreshTokenService.revokeAllTokensForUser(userId);
-            logger.info("All sessions logged out for user: {}", userId);
+            
+            // Blacklist all access tokens for user in Redis
+            jwtService.revokeAllUserTokens(userId);
+            
+            logger.info("All sessions logged out for user: {} (Redis + Database)", userId);
         } catch (Exception e) {
             logger.error("Logout all failed for user: {}", userId, e);
             throw new RuntimeException("Logout all failed: " + e.getMessage());

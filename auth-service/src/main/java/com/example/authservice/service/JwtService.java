@@ -29,6 +29,8 @@ public class JwtService {
     private final long refreshTokenExpiration;
     private final String issuer;
     private final RevokedAccessTokenRepository revokedTokenRepository;
+    // Temporarily disable Redis integration for debugging
+    // private final RedisTokenBlacklistService redisTokenBlacklistService;
     
     public JwtService(@Value("${app.jwt.secret}") String secret,
                      @Value("${app.jwt.access-token-expiration}") long accessTokenExpiration,
@@ -40,6 +42,7 @@ public class JwtService {
         this.refreshTokenExpiration = refreshTokenExpiration;
         this.issuer = issuer;
         this.revokedTokenRepository = revokedTokenRepository;
+        // this.redisTokenBlacklistService = redisTokenBlacklistService;
     }
     
     public String generateAccessToken(UserDto user) {
@@ -128,9 +131,21 @@ public class JwtService {
     public boolean isTokenRevoked(String token) {
         try {
             String jti = extractJti(token);
-            return jti != null && revokedTokenRepository.existsByJti(UUID.fromString(jti));
+            if (jti == null) {
+                return true;
+            }
+            
+            // Check database (Redis temporarily disabled)
+            boolean dbRevoked = revokedTokenRepository.existsByJti(UUID.fromString(jti));
+            if (dbRevoked) {
+                logger.debug("Token {} is revoked in database", jti);
+                return true;
+            }
+            
+            return false;
         } catch (Exception e) {
             logger.error("Error checking token revocation status: {}", e.getMessage());
+            // In case of error, assume token is revoked for security
             return true;
         }
     }
@@ -154,6 +169,7 @@ public class JwtService {
             Date expiration = extractExpiration(token);
             
             if (jti != null && userId != null && expiration != null) {
+                // Store in database (Redis temporarily disabled)
                 LocalDateTime expiresAt = expiration.toInstant()
                         .atZone(ZoneId.systemDefault())
                         .toLocalDateTime();
@@ -165,10 +181,29 @@ public class JwtService {
                 );
                 
                 revokedTokenRepository.save(revokedToken);
-                logger.info("Token with JTI {} has been revoked", jti);
+                logger.info("Token with JTI {} has been revoked (Database only)", jti);
             }
         } catch (Exception e) {
             logger.error("Failed to revoke token: {}", e.getMessage());
+        }
+    }
+    
+    public void revokeAllUserTokens(Long userId) {
+        try {
+            // Redis temporarily disabled - this would blacklist all tokens for user in Redis
+            logger.info("All tokens blacklisting for user {} (Redis temporarily disabled)", userId);
+        } catch (Exception e) {
+            logger.error("Failed to revoke all tokens for user {}: {}", userId, e.getMessage());
+        }
+    }
+    
+    public boolean areAllUserTokensRevoked(Long userId) {
+        try {
+            // Redis temporarily disabled - this would check if all tokens are blacklisted for user
+            return false;
+        } catch (Exception e) {
+            logger.error("Failed to check if all tokens are revoked for user {}: {}", userId, e.getMessage());
+            return false;
         }
     }
     

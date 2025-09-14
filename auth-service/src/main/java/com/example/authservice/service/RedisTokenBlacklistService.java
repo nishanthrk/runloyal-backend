@@ -19,8 +19,8 @@ public class RedisTokenBlacklistService {
     private final long defaultTtl;
     
     public RedisTokenBlacklistService(RedisTemplate<String, String> redisTemplate,
-                                    @Value("${app.redis.token-blacklist.key-prefix}") String keyPrefix,
-                                    @Value("${app.redis.token-blacklist.default-ttl}") long defaultTtl) {
+                                    @Value("${app.redis.tokenBlacklist.keyPrefix}") String keyPrefix,
+                                    @Value("${app.redis.tokenBlacklist.defaultTtl}") long defaultTtl) {
         this.redisTemplate = redisTemplate;
         this.keyPrefix = keyPrefix;
         this.defaultTtl = defaultTtl;
