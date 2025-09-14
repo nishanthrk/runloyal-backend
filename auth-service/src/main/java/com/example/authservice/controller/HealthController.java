@@ -17,7 +17,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/actuator")
+@RequestMapping("/health")
 public class HealthController {
 
     private static final Logger logger = LoggerFactory.getLogger(HealthController.class);
@@ -31,7 +31,7 @@ public class HealthController {
     @Autowired
     private UserServiceClient userServiceClient;
 
-    @GetMapping("/health")
+    @GetMapping
     public ResponseEntity<Map<String, Object>> health() {
         Map<String, Object> health = new HashMap<>();
         Map<String, Object> dependencies = new HashMap<>();

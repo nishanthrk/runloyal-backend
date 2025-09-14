@@ -87,7 +87,7 @@ public class AddressServiceClient {
      */
     public ResponseEntity<Map> getHealth() {
         try {
-            String url = addressServiceUrl + "/actuator/health";
+            String url = addressServiceUrl + "/health";
             return restTemplate.getForEntity(url, Map.class);
         } catch (Exception e) {
             logger.error("Error checking Address Service health", e);

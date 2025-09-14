@@ -21,7 +21,7 @@ public class SecurityConfig {
                 .requestMatchers("/api-docs/**").permitAll()
                 .requestMatchers("/swagger-ui/**").permitAll()
                 .requestMatchers("/swagger-ui.html").permitAll()
-                .requestMatchers("/actuator/**").permitAll()
+                .requestMatchers("/health").permitAll()
                 .anyRequest().permitAll()  // Allow all requests for now
             )
             .httpBasic(httpBasic -> httpBasic.disable())  // Disable HTTP Basic authentication

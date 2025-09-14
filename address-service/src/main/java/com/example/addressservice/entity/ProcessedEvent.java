@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "processed_events")
@@ -13,7 +14,7 @@ public class ProcessedEvent {
     
     @Id
     @Column(name = "event_id")
-    private String eventId;
+    private UUID eventId;
     
     @NotBlank(message = "Event type is required")
     @Column(name = "event_type", nullable = false, length = 100)
@@ -27,17 +28,17 @@ public class ProcessedEvent {
     public ProcessedEvent() {}
     
     // Constructor with required fields
-    public ProcessedEvent(String eventId, String eventType) {
+    public ProcessedEvent(UUID eventId, String eventType) {
         this.eventId = eventId;
         this.eventType = eventType;
     }
     
     // Getters and Setters
-    public String getEventId() {
+    public UUID getEventId() {
         return eventId;
     }
     
-    public void setEventId(String eventId) {
+    public void setEventId(UUID eventId) {
         this.eventId = eventId;
     }
     

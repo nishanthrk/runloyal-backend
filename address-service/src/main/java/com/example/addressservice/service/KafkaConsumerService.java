@@ -22,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -79,7 +80,7 @@ public class KafkaConsumerService {
             }
             
             // Check if event has already been processed (idempotency)
-            String eventId = userEvent.getId().toString();
+            UUID eventId = userEvent.getId();
             if (processedEventRepository.existsByEventId(eventId)) {
                 logger.info("Event already processed, skipping: {}", eventId);
                 return;
@@ -132,7 +133,7 @@ public class KafkaConsumerService {
                        profileEvent, topic, partition, offset);
             
             // Generate unique event ID for idempotency (using userId + timestamp)
-            String eventId = "profile_updated_" + profileEvent.getUserId() + "_" + profileEvent.getTimestamp().toString();
+            UUID eventId = UUID.nameUUIDFromBytes(("profile_updated_" + profileEvent.getUserId() + "_" + profileEvent.getTimestamp().toString()).getBytes());
             
             // Check if event has already been processed (idempotency)
             if (processedEventRepository.existsByEventId(eventId)) {

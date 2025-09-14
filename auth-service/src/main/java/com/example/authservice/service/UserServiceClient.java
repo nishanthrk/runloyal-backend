@@ -165,7 +165,7 @@ public class UserServiceClient {
             headers.set("X-Internal-API-Key", internalApiKey);
             HttpEntity<String> entity = new HttpEntity<>(headers);
             
-            String url = userServiceBaseUrl + "/actuator/health";
+            String url = userServiceBaseUrl + "/health";
             return restTemplate.exchange(
                 url, HttpMethod.GET, entity, Map.class
             );

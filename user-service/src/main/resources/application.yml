@@ -87,5 +87,3 @@ spring:
 address:
   service:
     url: ${ADDRESS_SERVICE_URL:http://host.docker.internal:8083}
-
-# Actuator disabled for Docker builds to avoid cgroupv2 issues

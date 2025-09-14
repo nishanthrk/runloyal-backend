@@ -32,24 +32,21 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             // Disable CSRF as we're using JWT tokens
-            .csrf().disable()
+            .csrf(csrf -> csrf.disable())
             
             // Configure CORS
-            .cors().configurationSource(corsConfigurationSource())
-            
-            .and()
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             
             // Configure session management - stateless
-            .sessionManagement()
-            .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-            
-            .and()
+            .sessionManagement(session -> session
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            )
             
             // Configure authorization
             .authorizeHttpRequests(authz -> authz
                 // Public endpoints
                 .requestMatchers(
-                    "/actuator/**",
+                    "/health",
                     "/swagger-ui/**",
                     "/swagger-ui.html",
                     "/v3/api-docs/**",

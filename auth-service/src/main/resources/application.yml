@@ -99,20 +99,7 @@ spring:
 server:
   port: 8081
 
-# Actuator Configuration
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info,metrics,prometheus
-  endpoint:
-    health:
-      enabled: false  # Disable default health endpoint to use custom one
-      show-details: always
-  metrics:
-    export:
-      prometheus:
-        enabled: true
+# Custom health endpoint is used instead of actuator
 
 # Application Configuration
 app:
@@ -188,5 +175,3 @@ spring:
 app:
   user-service:
     base-url: ${USER_SERVICE_URL:http://localhost:8082}
-
-# Actuator disabled for Docker builds to avoid cgroupv2 issues

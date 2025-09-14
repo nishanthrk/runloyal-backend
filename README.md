@@ -250,14 +250,64 @@ curl -X GET http://localhost:8081/api/auth/profile \
 
 ### Database Migrations
 
+#### General Migration Commands
+
 ```bash
-# Run Flyway migrations
-cd auth-service
+# Run Flyway migrations for any service
+cd <service-directory>
 ./mvnw flyway:migrate
 
 # Check migration status
 ./mvnw flyway:info
 ```
+
+#### Address Service Migration (If Tables Are Deleted)
+
+If the address service database tables get deleted, follow these steps to recreate them:
+
+1. **Verify PostgreSQL is running:**
+   ```bash
+   # Check if PostgreSQL is running locally
+   ps aux | grep postgres
+   ```
+
+2. **Check database status:**
+   ```bash
+   # Connect to addressdb and check if tables exist
+   psql -h localhost -U nishanth -d addressdb -c "\dt"
+   ```
+
+3. **Run the migration with explicit database configuration:**
+   ```bash
+   cd address-service
+   ./gradlew flywayMigrate -Dflyway.url=jdbc:postgresql://localhost:5432/addressdb -Dflyway.user=nishanth -Dflyway.password=
+   ```
+
+4. **Verify tables were created:**
+   ```bash
+   # Check all tables
+   psql -h localhost -U nishanth -d addressdb -c "\dt"
+   
+   # Check specific table structure
+   psql -h localhost -U nishanth -d addressdb -c "\d addresses"
+   psql -h localhost -U nishanth -d addressdb -c "\d processed_events"
+   psql -h localhost -U nishanth -d addressdb -c "\d failed_events"
+   ```
+
+5. **Verify migration history:**
+   ```bash
+   psql -h localhost -U nishanth -d addressdb -c "SELECT version, description, installed_on FROM flyway_schema_history ORDER BY installed_rank;"
+   ```
+
+**Expected Tables After Migration:**
+- `addresses` - Main address storage table
+- `processed_events` - Event processing tracking for idempotency
+- `failed_events` - Dead letter queue for failed event processing
+- `flyway_schema_history` - Migration tracking table
+
+**Migration Versions:**
+- **V1**: `init address schema` - Creates core address and processed_events tables
+- **V2**: `add failed events table` - Adds failed_events table for dead letter queue functionality
 
 ### Adding New Features
 

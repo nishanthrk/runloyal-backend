@@ -13,12 +13,12 @@ import java.util.List;
 import java.util.UUID;
 
 @Repository
-public interface ProcessedEventRepository extends JpaRepository<ProcessedEvent, String> {
+public interface ProcessedEventRepository extends JpaRepository<ProcessedEvent, UUID> {
     
     /**
      * Check if an event has already been processed
      */
-    boolean existsByEventId(String eventId);
+    boolean existsByEventId(UUID eventId);
     
     /**
      * Find processed events by type

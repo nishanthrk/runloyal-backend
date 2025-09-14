@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.Properties;
 
 @RestController
-@RequestMapping("/actuator")
+@RequestMapping("/health")
 public class HealthController {
 
     private static final Logger logger = LoggerFactory.getLogger(HealthController.class);
@@ -39,7 +39,7 @@ public class HealthController {
     @Value("${spring.kafka.bootstrap-servers}")
     private String kafkaBootstrapServers;
 
-    @GetMapping("/health")
+    @GetMapping
     public ResponseEntity<Map<String, Object>> health() {
         Map<String, Object> health = new HashMap<>();
         Map<String, Object> dependencies = new HashMap<>();
