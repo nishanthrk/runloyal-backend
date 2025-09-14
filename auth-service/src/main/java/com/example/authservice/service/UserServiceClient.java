@@ -57,7 +57,7 @@ public class UserServiceClient {
         }
     }
     
-    @Cacheable(value = "users", key = "#email")
+    // @Cacheable(value = "users", key = "#email")
     public Optional<UserDto> getUserByEmail(String email) {
         logger.info("UserServiceClient.getUserByEmail called with email: {}", email);
         try {
@@ -92,16 +92,16 @@ public class UserServiceClient {
         }
     }
     
-    @Cacheable(value = "users", key = "#username")
+    // @Cacheable(value = "users", key = "#username")
     public Optional<UserDto> getUserByUsername(String username) {
         logger.info("UserServiceClient.getUserByUsername called with username: {}", username);
         try {
             HttpHeaders headers = new HttpHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
             
-               // Use the public endpoint /api/users/username/{username} instead of internal endpoint
-               // Don't manually encode the username as Spring's RestTemplate will handle it
-               String url = userServiceBaseUrl + "/api/users/username/" + username;
+            // Use the public endpoint /api/users/username/{username} instead of internal endpoint
+            // Don't manually encode the username as Spring's RestTemplate will handle it
+            String url = userServiceBaseUrl + "/api/users/username/" + username;
             
             logger.info("Fetching user by username: {}", username);
             logger.info("Full URL: {}", url);
