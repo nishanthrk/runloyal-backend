@@ -27,7 +27,7 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
     private final AuthService authService;
     private final ObjectMapper objectMapper;
     
-    @Value("${app.oauth2.authorizedRedirectUris:http://localhost:8081/api/auth/oauth2/success}")
+    @Value("${app.oauth2.authorizedRedirectUris:http://localhost:8081/api/auth/oauth2/callback}")
     private String redirectUri;
     
     public OAuth2AuthenticationSuccessHandler(AuthService authService, ObjectMapper objectMapper) {

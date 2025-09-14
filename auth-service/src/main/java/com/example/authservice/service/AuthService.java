@@ -2,10 +2,14 @@ package com.example.authservice.service;
 
 import com.example.authservice.entity.RefreshToken;
 import com.example.authservice.entity.OAuthProviderToken;
+import com.example.authservice.entity.AuthCredentials;
 import com.example.authservice.repository.OAuthProviderTokenRepository;
+import com.example.authservice.repository.AuthCredentialsRepository;
 import com.example.authservice.dto.UserDto;
+import com.example.authservice.util.UsernameGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,16 +27,25 @@ public class AuthService {
     private final JwtService jwtService;
     private final RefreshTokenService refreshTokenService;
     private final OAuthProviderTokenRepository oauthProviderTokenRepository;
+    private final AuthCredentialsRepository authCredentialsRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final UsernameGenerator usernameGenerator;
     
     public AuthService(
             UserServiceClient userServiceClient,
             JwtService jwtService,
             RefreshTokenService refreshTokenService,
-            OAuthProviderTokenRepository oauthProviderTokenRepository) {
+            OAuthProviderTokenRepository oauthProviderTokenRepository,
+            AuthCredentialsRepository authCredentialsRepository,
+            PasswordEncoder passwordEncoder,
+            UsernameGenerator usernameGenerator) {
         this.userServiceClient = userServiceClient;
         this.jwtService = jwtService;
         this.refreshTokenService = refreshTokenService;
         this.oauthProviderTokenRepository = oauthProviderTokenRepository;
+        this.authCredentialsRepository = authCredentialsRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.usernameGenerator = usernameGenerator;
     }
     
     @Transactional
@@ -46,7 +59,11 @@ public class AuthService {
             UserDto createdUser = userServiceClient.createUser(userDto);
             
             // Store auth credentials in Auth Service
-            // TODO: Implement password hashing and storage in auth_credentials table
+            String passwordHash = passwordEncoder.encode(password);
+            AuthCredentials authCredentials = new AuthCredentials(createdUser.getId(), passwordHash);
+            authCredentialsRepository.save(authCredentials);
+            
+            logger.info("Auth credentials stored for user: {}", username);
             
             String accessToken = jwtService.generateAccessToken(createdUser);
             RefreshToken refreshToken = refreshTokenService.createRefreshToken(
@@ -76,9 +93,32 @@ public class AuthService {
                              String clientId, String deviceInfo, String ipAddress) {
         try {
             // Find user by username or email
-            Optional<UserDto> userOpt = userServiceClient.getUserByUsername(identifier);
-            if (userOpt.isEmpty()) {
+            logger.info("Attempting login with identifier: {}", identifier);
+            Optional<UserDto> userOpt;
+            
+            // Check if identifier looks like an email (contains @ symbol)
+            if (identifier.contains("@")) {
+                logger.info("Identifier appears to be an email, trying email lookup for: {}", identifier);
                 userOpt = userServiceClient.getUserByEmail(identifier);
+                logger.info("Email lookup result: {}", userOpt.isPresent() ? "found" : "not found");
+                
+                // If email lookup fails, also try username lookup as fallback
+                if (userOpt.isEmpty()) {
+                    logger.info("Email lookup failed, trying username lookup as fallback for: {}", identifier);
+                    userOpt = userServiceClient.getUserByUsername(identifier);
+                    logger.info("Username lookup result: {}", userOpt.isPresent() ? "found" : "not found");
+                }
+            } else {
+                logger.info("Identifier appears to be a username, trying username lookup for: {}", identifier);
+                userOpt = userServiceClient.getUserByUsername(identifier);
+                logger.info("Username lookup result: {}", userOpt.isPresent() ? "found" : "not found");
+                
+                // If username lookup fails, also try email lookup as fallback
+                if (userOpt.isEmpty()) {
+                    logger.info("Username lookup failed, trying email lookup as fallback for: {}", identifier);
+                    userOpt = userServiceClient.getUserByEmail(identifier);
+                    logger.info("Email lookup result: {}", userOpt.isPresent() ? "found" : "not found");
+                }
             }
             
             if (userOpt.isEmpty()) {
@@ -88,8 +128,23 @@ public class AuthService {
             
             UserDto user = userOpt.get();
             
-            // TODO: Validate password against auth_credentials table
-            // For now, we'll skip password validation as it needs to be implemented
+            // Validate password against auth_credentials table
+            Optional<AuthCredentials> authCredentialsOpt = authCredentialsRepository.findActiveByUserId(user.getId());
+            if (authCredentialsOpt.isEmpty()) {
+                logger.warn("No auth credentials found for user: {}", user.getUsername());
+                throw new RuntimeException("Invalid credentials");
+            }
+            
+            AuthCredentials authCredentials = authCredentialsOpt.get();
+            if (!passwordEncoder.matches(password, authCredentials.getPasswordHash())) {
+                logger.warn("Invalid password for user: {}", user.getUsername());
+                throw new RuntimeException("Invalid credentials");
+            }
+            
+            if (!authCredentials.getEnabled()) {
+                logger.warn("Account disabled for user: {}", user.getUsername());
+                throw new RuntimeException("Account disabled");
+            }
             
             String accessToken = jwtService.generateAccessToken(user);
             RefreshToken refreshToken = refreshTokenService.createRefreshToken(
@@ -144,9 +199,11 @@ public class AuthService {
                     user = existingUserOpt.get();
                     logger.info("Linking OAuth provider {} to existing user: {}", provider, user.getUsername());
                 } else {
-                    // Create new user
+                    // Create new user with unique username
+                    String uniqueUsername = generateUniqueUsername(email, username, provider, providerUserId);
+                    
                     UserDto newUserDto = new UserDto();
-                    newUserDto.setUsername(username);
+                    newUserDto.setUsername(uniqueUsername);
                     newUserDto.setEmail(email);
                     newUserDto.setEmailVerified(true); // OAuth emails are typically verified
                     
@@ -159,7 +216,8 @@ public class AuthService {
                     }
                     
                     user = userServiceClient.createUser(newUserDto);
-                    logger.info("Created new user via social login: {} via {}", user.getUsername(), provider);
+                    logger.info("Created new user via social login: {} (generated from: {}) via {}", 
+                               user.getUsername(), username, provider);
                 }
                 
                 // Store OAuth provider token
@@ -294,6 +352,43 @@ public class AuthService {
         } catch (Exception e) {
             logger.error("Failed to extract user from token: {}", e.getMessage());
             return Optional.empty();
+        }
+    }
+    
+    /**
+     * Generate a unique username for OAuth2 users
+     */
+    private String generateUniqueUsername(String email, String fullName, String provider, String providerId) {
+        String baseUsername = usernameGenerator.generateUsername(email, fullName, provider, providerId);
+        
+        // Check if username is already taken
+        int suffix = 1;
+        String candidateUsername = baseUsername;
+        
+        while (true) {
+            try {
+                Optional<UserDto> existingUser = userServiceClient.getUserByUsername(candidateUsername);
+                if (existingUser.isEmpty()) {
+                    // Username is available
+                    logger.info("Generated unique username: {} (base: {})", candidateUsername, baseUsername);
+                    return candidateUsername;
+                }
+                
+                // Username is taken, try with suffix
+                candidateUsername = usernameGenerator.generateUniqueUsername(baseUsername, suffix);
+                suffix++;
+                
+                // Prevent infinite loop
+                if (suffix > 1000) {
+                    logger.warn("Could not generate unique username after 1000 attempts, using UUID fallback");
+                    return provider.toLowerCase() + "_" + UUID.randomUUID().toString().substring(0, 8);
+                }
+                
+            } catch (Exception e) {
+                logger.error("Error checking username availability: {}", candidateUsername, e);
+                // Fallback to UUID-based username
+                return provider.toLowerCase() + "_" + UUID.randomUUID().toString().substring(0, 8);
+            }
         }
     }
     

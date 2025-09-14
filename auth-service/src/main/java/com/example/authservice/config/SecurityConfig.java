@@ -44,6 +44,7 @@ public class SecurityConfig {
                     "/api/auth/login",
                     "/api/auth/refresh",
                     "/api/auth/validate",
+                    "/api/auth/oauth2/**",
                     "/oauth2/**",
                     "/login/oauth2/**",
                     "/swagger-ui/**",
@@ -69,10 +70,6 @@ public class SecurityConfig {
         return http.build();
     }
     
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
     
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {

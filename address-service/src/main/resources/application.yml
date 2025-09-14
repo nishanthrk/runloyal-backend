@@ -44,6 +44,21 @@ server:
 jwt:
   secret: ${JWT_SECRET:mySecretKey123456789012345678901234567890}
 
+# Service URLs
+app:
+  user-service:
+    base-url: ${USER_SERVICE_URL:http://localhost:8082}
+
+# Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      enabled: false  # Disable default health endpoint to use custom one
+
 # Swagger/OpenAPI Configuration
 springdoc:
   api-docs:
@@ -65,9 +80,14 @@ spring:
       on-profile: docker
   
   datasource:
-    url: ${DATABASE_URL:jdbc:postgresql://address-db:5432/addressdb}
+    url: ${DATABASE_URL:jdbc:postgresql://host.docker.internal:5432/addressdb}
   
   kafka:
-    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:kafka:9092}
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:host.docker.internal:9092}
+
+# Service URLs for Docker
+app:
+  user-service:
+    base-url: ${USER_SERVICE_URL:http://host.docker.internal:8082}
 
 # Actuator disabled for Docker builds to avoid cgroupv2 issues

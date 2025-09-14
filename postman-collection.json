@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "RL Backend Microservices - Complete Flow",
-    "description": "Complete testing collection for Auth, User, and Address services with distributed transactions",
+    "description": "Complete testing collection for Auth, User, and Address services with distributed transactions, social login, and comprehensive health checks",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -32,14 +32,20 @@
     {
       "key": "userId",
       "value": ""
+    },
+    {
+      "key": "addressId",
+      "value": ""
     }
   ],
   "item": [
     {
       "name": "1. Health Checks",
+      "description": "Comprehensive health checks for all services with dependency monitoring",
       "item": [
         {
           "name": "Auth Service Health",
+          "description": "Check Auth Service health including Database, Redis, and User Service dependencies",
           "request": {
             "method": "GET",
             "header": [],
@@ -53,6 +59,7 @@
         },
         {
           "name": "User Service Health",
+          "description": "Check User Service health including Database, Kafka, and Address Service dependencies",
           "request": {
             "method": "GET",
             "header": [],
@@ -66,6 +73,7 @@
         },
         {
           "name": "Address Service Health",
+          "description": "Check Address Service health including Database and Kafka dependencies",
           "request": {
             "method": "GET",
             "header": [],
@@ -81,9 +89,11 @@
     },
     {
       "name": "2. Auth Service - Authentication Flow",
+      "description": "Complete authentication flow including traditional and social login",
       "item": [
         {
           "name": "Register New User",
+          "description": "Register a new user with username, email, and password",
           "event": [
             {
               "listen": "test",
@@ -122,6 +132,7 @@
         },
         {
           "name": "Login User",
+          "description": "Login with username/email and password",
           "event": [
             {
               "listen": "test",
@@ -159,7 +170,117 @@
           }
         },
         {
+          "name": "Get OAuth2 Authorization URL - Google",
+          "description": "Get Google OAuth2 authorization URL for frontend applications",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}:{{authServicePort}}/api/auth/oauth2/authorize/google",
+              "host": ["{{baseUrl}}"],
+              "port": "{{authServicePort}}",
+              "path": ["api", "auth", "oauth2", "authorize", "google"]
+            }
+          }
+        },
+        {
+          "name": "Get OAuth2 Authorization URL - GitHub",
+          "description": "Get GitHub OAuth2 authorization URL for frontend applications",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}:{{authServicePort}}/api/auth/oauth2/authorize/github",
+              "host": ["{{baseUrl}}"],
+              "port": "{{authServicePort}}",
+              "path": ["api", "auth", "oauth2", "authorize", "github"]
+            }
+          }
+        },
+        {
+          "name": "Get OAuth2 Authorization URL - Facebook",
+          "description": "Get Facebook OAuth2 authorization URL for frontend applications",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}:{{authServicePort}}/api/auth/oauth2/authorize/facebook",
+              "host": ["{{baseUrl}}"],
+              "port": "{{authServicePort}}",
+              "path": ["api", "auth", "oauth2", "authorize", "facebook"]
+            }
+          }
+        },
+        {
+          "name": "Traditional OAuth2 Redirect - Google",
+          "description": "Traditional server-side OAuth2 redirect (for testing)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}:{{authServicePort}}/oauth2/authorization/google",
+              "host": ["{{baseUrl}}"],
+              "port": "{{authServicePort}}",
+              "path": ["oauth2", "authorization", "google"]
+            }
+          }
+        },
+        {
+          "name": "OAuth2 Success Callback",
+          "description": "Handle OAuth2 success callback (called by OAuth2 provider)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('accessToken', response.accessToken);",
+                  "    pm.collectionVariables.set('refreshToken', response.refreshToken);",
+                  "    pm.collectionVariables.set('userId', response.userId);",
+                  "    console.log('Social login successful. User ID:', response.userId);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}:{{authServicePort}}/api/auth/oauth2/callback",
+              "host": ["{{baseUrl}}"],
+              "port": "{{authServicePort}}",
+              "path": ["api", "auth", "oauth2", "callback"]
+            }
+          }
+        },
+        {
+          "name": "Mobile OAuth2 Login - Google",
+          "description": "Handle OAuth2 login for mobile applications",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"accessToken\": \"google-oauth2-access-token\",\n  \"idToken\": \"google-id-token\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}:{{authServicePort}}/api/auth/oauth2/mobile/google",
+              "host": ["{{baseUrl}}"],
+              "port": "{{authServicePort}}",
+              "path": ["api", "auth", "oauth2", "mobile", "google"]
+            }
+          }
+        },
+        {
           "name": "Get User Profile (Auth Service)",
+          "description": "Get user profile from Auth Service",
           "request": {
             "method": "GET",
             "header": [
@@ -178,6 +299,7 @@
         },
         {
           "name": "Refresh Token",
+          "description": "Refresh access token using refresh token",
           "event": [
             {
               "listen": "test",
@@ -212,14 +334,43 @@
               "path": ["api", "auth", "refresh"]
             }
           }
+        },
+        {
+          "name": "Logout User",
+          "description": "Logout user and invalidate tokens",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}:{{authServicePort}}/api/auth/logout",
+              "host": ["{{baseUrl}}"],
+              "port": "{{authServicePort}}",
+              "path": ["api", "auth", "logout"]
+            }
+          }
         }
       ]
     },
     {
       "name": "3. User Service - Profile Management",
+      "description": "Complete user profile management with search and CRUD operations",
       "item": [
         {
           "name": "Get User Profile (User Service)",
+          "description": "Get user profile from User Service",
           "request": {
             "method": "GET",
             "header": [
@@ -237,7 +388,100 @@
           }
         },
         {
+          "name": "Get All Users",
+          "description": "Get all users with pagination",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}:{{userServicePort}}/api/users?page=0&size=10",
+              "host": ["{{baseUrl}}"],
+              "port": "{{userServicePort}}",
+              "path": ["api", "users"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get User by Username",
+          "description": "Get user by username",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}:{{userServicePort}}/api/users/username/testuser",
+              "host": ["{{baseUrl}}"],
+              "port": "{{userServicePort}}",
+              "path": ["api", "users", "username", "testuser"]
+            }
+          }
+        },
+        {
+          "name": "Get User by Email",
+          "description": "Get user by email",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}:{{userServicePort}}/api/users/email/test@example.com",
+              "host": ["{{baseUrl}}"],
+              "port": "{{userServicePort}}",
+              "path": ["api", "users", "email", "test@example.com"]
+            }
+          }
+        },
+        {
+          "name": "Search Users",
+          "description": "Search users by query",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}:{{userServicePort}}/api/users/search?q=test",
+              "host": ["{{baseUrl}}"],
+              "port": "{{userServicePort}}",
+              "path": ["api", "users", "search"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "test"
+                }
+              ]
+            }
+          }
+        },
+        {
           "name": "Update User Profile Only",
+          "description": "Update user profile without address (no distributed transaction)",
           "request": {
             "method": "PUT",
             "header": [
@@ -259,6 +503,90 @@
               "host": ["{{baseUrl}}"],
               "port": "{{userServicePort}}",
               "path": ["api", "users", "{{userId}}", "profile"]
+            }
+          }
+        },
+        {
+          "name": "Update User (Full)",
+          "description": "Update user with all fields",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"updateduser\",\n  \"email\": \"updated@example.com\",\n  \"firstName\": \"Updated\",\n  \"lastName\": \"User\",\n  \"phoneNumber\": \"+1987654321\",\n  \"dateOfBirth\": \"1985-05-15\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}:{{userServicePort}}/api/users/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "port": "{{userServicePort}}",
+              "path": ["api", "users", "{{userId}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete User",
+          "description": "Delete user account",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}:{{userServicePort}}/api/users/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "port": "{{userServicePort}}",
+              "path": ["api", "users", "{{userId}}"]
+            }
+          }
+        },
+        {
+          "name": "Check Username Exists",
+          "description": "Check if username exists",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}:{{userServicePort}}/api/users/exists/username/testuser",
+              "host": ["{{baseUrl}}"],
+              "port": "{{userServicePort}}",
+              "path": ["api", "users", "exists", "username", "testuser"]
+            }
+          }
+        },
+        {
+          "name": "Check Email Exists",
+          "description": "Check if email exists",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}:{{userServicePort}}/api/users/exists/email/test@example.com",
+              "host": ["{{baseUrl}}"],
+              "port": "{{userServicePort}}",
+              "path": ["api", "users", "exists", "email", "test@example.com"]
             }
           }
         }
@@ -326,9 +654,11 @@
     },
     {
       "name": "5. Address Service - Direct Address Management",
+      "description": "Direct address management operations",
       "item": [
         {
           "name": "Get User Addresses",
+          "description": "Get all addresses for a user",
           "request": {
             "method": "GET",
             "header": [
@@ -346,7 +676,89 @@
           }
         },
         {
+          "name": "Get All Addresses",
+          "description": "Get all addresses with pagination",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}:{{addressServicePort}}/api/v1/addresses?page=0&size=10",
+              "host": ["{{baseUrl}}"],
+              "port": "{{addressServicePort}}",
+              "path": ["api", "v1", "addresses"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Address by ID",
+          "description": "Get specific address by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}:{{addressServicePort}}/api/v1/addresses/{{addressId}}",
+              "host": ["{{baseUrl}}"],
+              "port": "{{addressServicePort}}",
+              "path": ["api", "v1", "addresses", "{{addressId}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Primary Address",
+          "description": "Get user's primary address",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}:{{addressServicePort}}/api/v1/addresses/primary",
+              "host": ["{{baseUrl}}"],
+              "port": "{{addressServicePort}}",
+              "path": ["api", "v1", "addresses", "primary"]
+            }
+          }
+        },
+        {
           "name": "Create Address Directly",
+          "description": "Create address directly (not via distributed transaction)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('addressId', response.id);",
+                  "    console.log('Address created successfully. Address ID:', response.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
@@ -373,6 +785,7 @@
         },
         {
           "name": "Update Address",
+          "description": "Update existing address",
           "request": {
             "method": "PUT",
             "header": [
@@ -390,20 +803,152 @@
               "raw": "{\n  \"line1\": \"789 Pine Street Updated\",\n  \"line2\": \"Apt 5C\",\n  \"city\": \"Seattle\",\n  \"state\": \"WA\",\n  \"postalCode\": \"98101\",\n  \"country\": \"USA\",\n  \"isPrimary\": true\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}:{{addressServicePort}}/api/v1/addresses/1",
+              "raw": "{{baseUrl}}:{{addressServicePort}}/api/v1/addresses/{{addressId}}",
               "host": ["{{baseUrl}}"],
               "port": "{{addressServicePort}}",
-              "path": ["api", "v1", "addresses", "1"]
+              "path": ["api", "v1", "addresses", "{{addressId}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Address",
+          "description": "Delete address",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}:{{addressServicePort}}/api/v1/addresses/{{addressId}}",
+              "host": ["{{baseUrl}}"],
+              "port": "{{addressServicePort}}",
+              "path": ["api", "v1", "addresses", "{{addressId}}"]
+            }
+          }
+        },
+        {
+          "name": "Search Addresses",
+          "description": "Search addresses by query",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}:{{addressServicePort}}/api/v1/addresses/search?q=Seattle",
+              "host": ["{{baseUrl}}"],
+              "port": "{{addressServicePort}}",
+              "path": ["api", "v1", "addresses", "search"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "Seattle"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Addresses by Country",
+          "description": "Get addresses by country",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}:{{addressServicePort}}/api/v1/addresses/country/USA",
+              "host": ["{{baseUrl}}"],
+              "port": "{{addressServicePort}}",
+              "path": ["api", "v1", "addresses", "country", "USA"]
+            }
+          }
+        },
+        {
+          "name": "Get Address Count",
+          "description": "Get total address count",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}:{{addressServicePort}}/api/v1/addresses/count",
+              "host": ["{{baseUrl}}"],
+              "port": "{{addressServicePort}}",
+              "path": ["api", "v1", "addresses", "count"]
             }
           }
         }
       ]
     },
     {
-      "name": "6. Internal APIs (Service-to-Service)",
+      "name": "6. Kafka Retry & Dead Letter Queue Management",
+      "description": "Manage failed Kafka events and retry processing",
+      "item": [
+        {
+          "name": "Get Failed Events",
+          "description": "Get all failed Kafka events",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}:{{addressServicePort}}/api/v1/failed-events",
+              "host": ["{{baseUrl}}"],
+              "port": "{{addressServicePort}}",
+              "path": ["api", "v1", "failed-events"]
+            }
+          }
+        },
+        {
+          "name": "Get Failed Events Stats",
+          "description": "Get processing statistics for failed events",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}:{{addressServicePort}}/api/v1/failed-events/stats",
+              "host": ["{{baseUrl}}"],
+              "port": "{{addressServicePort}}",
+              "path": ["api", "v1", "failed-events", "stats"]
+            }
+          }
+        },
+        {
+          "name": "Retry Failed Event",
+          "description": "Retry a specific failed event",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}:{{addressServicePort}}/api/v1/failed-events/{{eventId}}/retry",
+              "host": ["{{baseUrl}}"],
+              "port": "{{addressServicePort}}",
+              "path": ["api", "v1", "failed-events", "{{eventId}}", "retry"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Internal APIs (Service-to-Service)",
+      "description": "Internal APIs for service-to-service communication",
       "item": [
         {
           "name": "Get User by ID (Internal)",
+          "description": "Internal API to get user by ID",
           "request": {
             "method": "GET",
             "header": [
@@ -422,6 +967,7 @@
         },
         {
           "name": "Get User by Username (Internal)",
+          "description": "Internal API to get user by username",
           "request": {
             "method": "GET",
             "header": [
@@ -445,7 +991,33 @@
           }
         },
         {
+          "name": "Get User by Email (Internal)",
+          "description": "Internal API to get user by email",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Internal-API-Key",
+                "value": "internal-secret-key"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}:{{userServicePort}}/internal/users/by-email?email=test@example.com",
+              "host": ["{{baseUrl}}"],
+              "port": "{{userServicePort}}",
+              "path": ["internal", "users", "by-email"],
+              "query": [
+                {
+                  "key": "email",
+                  "value": "test@example.com"
+                }
+              ]
+            }
+          }
+        },
+        {
           "name": "Create User (Internal)",
+          "description": "Internal API to create user",
           "request": {
             "method": "POST",
             "header": [
@@ -469,14 +1041,127 @@
               "path": ["internal", "users"]
             }
           }
+        },
+        {
+          "name": "Create User by Provider (Internal)",
+          "description": "Internal API to create user by OAuth provider",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Internal-API-Key",
+                "value": "internal-secret-key"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"oauthuser\",\n  \"email\": \"oauth@example.com\",\n  \"firstName\": \"OAuth\",\n  \"lastName\": \"User\",\n  \"provider\": \"google\",\n  \"providerUserId\": \"123456789\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}:{{userServicePort}}/internal/users/by-provider",
+              "host": ["{{baseUrl}}"],
+              "port": "{{userServicePort}}",
+              "path": ["internal", "users", "by-provider"]
+            }
+          }
+        },
+        {
+          "name": "Link Social Identity (Internal)",
+          "description": "Internal API to link social identity to user",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Internal-API-Key",
+                "value": "internal-secret-key"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": {{userId}},\n  \"provider\": \"github\",\n  \"providerUserId\": \"987654321\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}:{{userServicePort}}/internal/users/link-social",
+              "host": ["{{baseUrl}}"],
+              "port": "{{userServicePort}}",
+              "path": ["internal", "users", "link-social"]
+            }
+          }
+        },
+        {
+          "name": "Get User Primary Address (Internal)",
+          "description": "Internal API to get user's primary address",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Internal-API-Key",
+                "value": "internal-secret-key"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}:{{addressServicePort}}/internal/addresses/users/{{userId}}/primary",
+              "host": ["{{baseUrl}}"],
+              "port": "{{addressServicePort}}",
+              "path": ["internal", "addresses", "users", "{{userId}}", "primary"]
+            }
+          }
+        },
+        {
+          "name": "Get User Addresses (Internal)",
+          "description": "Internal API to get all user addresses",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Internal-API-Key",
+                "value": "internal-secret-key"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}:{{addressServicePort}}/internal/addresses/users/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "port": "{{addressServicePort}}",
+              "path": ["internal", "addresses", "users", "{{userId}}"]
+            }
+          }
+        },
+        {
+          "name": "Check User Has Addresses (Internal)",
+          "description": "Internal API to check if user has addresses",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Internal-API-Key",
+                "value": "internal-secret-key"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}:{{addressServicePort}}/internal/addresses/users/{{userId}}/exists",
+              "host": ["{{baseUrl}}"],
+              "port": "{{addressServicePort}}",
+              "path": ["internal", "addresses", "users", "{{userId}}", "exists"]
+            }
+          }
         }
       ]
     },
     {
-      "name": "7. API Documentation",
+      "name": "8. API Documentation",
+      "description": "Access to Swagger UI documentation for all services",
       "item": [
         {
           "name": "Auth Service Swagger UI",
+          "description": "Open Auth Service API documentation",
           "request": {
             "method": "GET",
             "header": [],
@@ -490,6 +1175,7 @@
         },
         {
           "name": "User Service Swagger UI",
+          "description": "Open User Service API documentation",
           "request": {
             "method": "GET",
             "header": [],
@@ -503,6 +1189,7 @@
         },
         {
           "name": "Address Service Swagger UI",
+          "description": "Open Address Service API documentation",
           "request": {
             "method": "GET",
             "header": [],
@@ -511,37 +1198,6 @@
               "host": ["{{baseUrl}}"],
               "port": "{{addressServicePort}}",
               "path": ["swagger-ui.html"]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "8. Logout & Cleanup",
-      "item": [
-        {
-          "name": "Logout User",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}:{{authServicePort}}/api/auth/logout",
-              "host": ["{{baseUrl}}"],
-              "port": "{{authServicePort}}",
-              "path": ["api", "auth", "logout"]
             }
           }
         }

@@ -12,6 +12,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import com.example.addressservice.client.UserServiceClient;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -31,6 +32,9 @@ public class HealthController {
 
     @Autowired
     private KafkaTemplate<String, Object> kafkaTemplate;
+
+    @Autowired
+    private UserServiceClient userServiceClient;
 
     @Value("${spring.kafka.bootstrap-servers}")
     private String kafkaBootstrapServers;
@@ -52,11 +56,16 @@ public class HealthController {
         Map<String, Object> kafka = checkKafka();
         dependencies.put("kafka", kafka);
         
+        // Check User Service connectivity
+        Map<String, Object> userService = checkUserService();
+        dependencies.put("userService", userService);
+        
         health.put("dependencies", dependencies);
         
         // Determine overall status
         boolean allHealthy = database.get("status").equals("UP") && 
-                           kafka.get("status").equals("UP");
+                           kafka.get("status").equals("UP") &&
+                           userService.get("status").equals("UP");
         
         health.put("status", allHealthy ? "UP" : "DOWN");
         
@@ -111,5 +120,31 @@ public class HealthController {
             kafkaHealth.put("bootstrapServers", kafkaBootstrapServers);
         }
         return kafkaHealth;
+    }
+
+    private Map<String, Object> checkUserService() {
+        Map<String, Object> userServiceHealth = new HashMap<>();
+        try {
+            long startTime = System.currentTimeMillis();
+            // Try to get user service health endpoint
+            ResponseEntity<Map> response = userServiceClient.getHealth();
+            long responseTime = System.currentTimeMillis() - startTime;
+            
+            if (response.getStatusCode().is2xxSuccessful()) {
+                userServiceHealth.put("status", "UP");
+                userServiceHealth.put("message", "User Service connection successful");
+                userServiceHealth.put("responseTime", responseTime + "ms");
+                userServiceHealth.put("userServiceStatus", response.getBody().get("status"));
+            } else {
+                userServiceHealth.put("status", "DOWN");
+                userServiceHealth.put("message", "User Service returned non-2xx status: " + response.getStatusCode());
+            }
+        } catch (Exception e) {
+            logger.error("User Service health check failed", e);
+            userServiceHealth.put("status", "DOWN");
+            userServiceHealth.put("message", "User Service connection failed: " + e.getMessage());
+            userServiceHealth.put("error", e.getClass().getSimpleName());
+        }
+        return userServiceHealth;
     }
 }

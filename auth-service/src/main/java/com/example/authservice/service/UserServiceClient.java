@@ -59,17 +59,27 @@ public class UserServiceClient {
     
     @Cacheable(value = "users", key = "#email")
     public Optional<UserDto> getUserByEmail(String email) {
+        logger.info("UserServiceClient.getUserByEmail called with email: {}", email);
         try {
             HttpHeaders headers = new HttpHeaders();
-            headers.set("X-Internal-API-Key", internalApiKey);
             HttpEntity<String> entity = new HttpEntity<>(headers);
             
-            String url = userServiceBaseUrl + "/internal/users/by-email?email=" + email;
+               // Use the public endpoint /api/users/email/{email} instead of internal endpoint
+               // Don't manually encode the email as Spring's RestTemplate will handle it
+               String url = userServiceBaseUrl + "/api/users/email/" + email;
+            
+            logger.info("Fetching user by email: {}", email);
+            logger.info("Full URL: {}", url);
+            
             ResponseEntity<UserDto> response = restTemplate.exchange(
                 url, HttpMethod.GET, entity, UserDto.class
             );
             
+            logger.info("Response status: {}", response.getStatusCode());
+            logger.info("Response body: {}", response.getBody());
+            
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                logger.info("User found with email: {}", email);
                 return Optional.of(response.getBody());
             }
             
@@ -84,17 +94,27 @@ public class UserServiceClient {
     
     @Cacheable(value = "users", key = "#username")
     public Optional<UserDto> getUserByUsername(String username) {
+        logger.info("UserServiceClient.getUserByUsername called with username: {}", username);
         try {
             HttpHeaders headers = new HttpHeaders();
-            headers.set("X-Internal-API-Key", internalApiKey);
             HttpEntity<String> entity = new HttpEntity<>(headers);
             
-            String url = userServiceBaseUrl + "/internal/users/by-username?username=" + username;
+               // Use the public endpoint /api/users/username/{username} instead of internal endpoint
+               // Don't manually encode the username as Spring's RestTemplate will handle it
+               String url = userServiceBaseUrl + "/api/users/username/" + username;
+            
+            logger.info("Fetching user by username: {}", username);
+            logger.info("Full URL: {}", url);
+            
             ResponseEntity<UserDto> response = restTemplate.exchange(
                 url, HttpMethod.GET, entity, UserDto.class
             );
             
+            logger.info("Response status: {}", response.getStatusCode());
+            logger.info("Response body: {}", response.getBody());
+            
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                logger.info("User found with username: {}", username);
                 return Optional.of(response.getBody());
             }
             
@@ -110,16 +130,24 @@ public class UserServiceClient {
     public UserDto createUser(UserDto userDto) {
         try {
             HttpHeaders headers = new HttpHeaders();
-            headers.set("X-Internal-API-Key", internalApiKey);
             headers.set("Content-Type", "application/json");
             HttpEntity<UserDto> entity = new HttpEntity<>(userDto, headers);
             
-            String url = userServiceBaseUrl + "/internal/users";
+            // Use the public endpoint /api/users instead of internal endpoint
+            String url = userServiceBaseUrl + "/api/users";
+            
+            logger.info("Creating user: {} with email: {}", userDto.getUsername(), userDto.getEmail());
+            logger.info("Full URL: {}", url);
+            
             ResponseEntity<UserDto> response = restTemplate.exchange(
                 url, HttpMethod.POST, entity, UserDto.class
             );
             
+            logger.info("Response status: {}", response.getStatusCode());
+            logger.info("Response body: {}", response.getBody());
+            
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                logger.info("User created successfully: {}", userDto.getUsername());
                 return response.getBody();
             }
             

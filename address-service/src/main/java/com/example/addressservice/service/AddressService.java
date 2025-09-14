@@ -1,5 +1,6 @@
 package com.example.addressservice.service;
 
+import com.example.addressservice.client.UserServiceClient;
 import com.example.addressservice.dto.AddressRequest;
 import com.example.addressservice.dto.AddressResponse;
 import com.example.addressservice.entity.Address;
@@ -22,10 +23,12 @@ public class AddressService {
     private static final Logger logger = LoggerFactory.getLogger(AddressService.class);
     
     private final AddressRepository addressRepository;
+    private final UserServiceClient userServiceClient;
     
     @Autowired
-    public AddressService(AddressRepository addressRepository) {
+    public AddressService(AddressRepository addressRepository, UserServiceClient userServiceClient) {
         this.addressRepository = addressRepository;
+        this.userServiceClient = userServiceClient;
     }
     
     /**
@@ -257,6 +260,13 @@ public class AddressService {
         
         ProfileUpdatedEvent.AddressInfo addressInfo = event.getAddress();
         Long userId = event.getUserId();
+        
+        // Validate that the user exists before processing address
+        if (!userServiceClient.userExists(userId)) {
+            logger.warn("User {} does not exist, skipping address processing for event: {}", 
+                       userId, event);
+            return;
+        }
         
         // Find existing primary address for the user
         Optional<Address> existingPrimary = addressRepository.findByUserIdAndIsPrimaryTrue(userId);
