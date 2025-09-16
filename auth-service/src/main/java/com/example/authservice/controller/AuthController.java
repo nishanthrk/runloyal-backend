@@ -53,6 +53,8 @@ public class AuthController {
                 request.getUsername(),
                 request.getEmail(),
                 request.getPassword(),
+                request.getFirstName(),
+                request.getLastName(),
                 clientId,
                 deviceInfo,
                 ipAddress

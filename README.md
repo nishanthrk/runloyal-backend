@@ -164,15 +164,16 @@ REDIS_PORT=6379
 
 ### User Registration Flow
 1. User registers via Auth Service
-2. Auth Service creates user record
-3. Auth Service publishes `UserCreated` event to Kafka
-4. User Service consumes event and creates user profile
+2. Auth Service calls User Service directly via REST API (`POST /api/users`)
+3. User Service creates user record in its database
+4. Auth Service stores authentication credentials in its database
+5. Auth Service returns JWT tokens to user
 
 ### User Update Flow
 1. User updates profile via User Service
 2. User Service updates database
-3. User Service publishes `UserUpdated` event via outbox pattern
-4. Address Service consumes event and updates related records
+3. User Service publishes `ProfileUpdated` event via outbox pattern to Kafka
+4. Address Service consumes event and updates related address records
 
 ## 🛠️ Development
 

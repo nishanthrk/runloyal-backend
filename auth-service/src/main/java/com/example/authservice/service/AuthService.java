@@ -50,12 +50,15 @@ public class AuthService {
     
     @Transactional
     public AuthResponse register(String username, String email, String password, 
+                                String firstName, String lastName,
                                 String clientId, String deviceInfo, String ipAddress) {
         try {
             // Create user via User Service
             UserDto userDto = new UserDto();
             userDto.setUsername(username);
             userDto.setEmail(email);
+            userDto.setFirstName(firstName);
+            userDto.setLastName(lastName);
             UserDto createdUser = userServiceClient.createUser(userDto);
             
             // Store auth credentials in Auth Service
